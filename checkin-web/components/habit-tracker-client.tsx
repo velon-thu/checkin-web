@@ -25,6 +25,7 @@ type CheckInHistoryItem = {
 type HabitTrackerClientProps = {
   initialHabits: CheckInItem[];
   initialHistoryRecords: CheckInHistoryItem[];
+  initialCheckinDatesByHabit: Record<string, string[]>;
 };
 
 const getTodayDate = () => {
@@ -36,20 +37,58 @@ const getTodayDate = () => {
   return `${year}-${month}-${day}`;
 };
 
+const getPreviousDate = (date: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const previousDate = new Date(year, month - 1, day);
+
+  previousDate.setDate(previousDate.getDate() - 1);
+
+  return getTodayDateFromDate(previousDate);
+};
+
+const getTodayDateFromDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const getHabitStreak = (
+  checkInDatesByHabit: Record<string, string[]>,
+  habitId: string,
+  today: string,
+) => {
+  const checkedDates = new Set(checkInDatesByHabit[habitId] ?? []);
+  let streak = 0;
+  let currentDate = today;
+
+  while (checkedDates.has(currentDate)) {
+    streak += 1;
+    currentDate = getPreviousDate(currentDate);
+  }
+
+  return streak;
+};
+
 export default function HabitTrackerClient({
   initialHabits,
   initialHistoryRecords,
+  initialCheckinDatesByHabit,
 }: HabitTrackerClientProps) {
   const [checkInItems, setCheckInItems] =
     useState<CheckInItem[]>(initialHabits);
   const [checkInHistory, setCheckInHistory] =
     useState<CheckInHistoryItem[]>(initialHistoryRecords);
+  const [checkInDatesByHabit, setCheckInDatesByHabit] = useState<
+    Record<string, string[]>
+  >(initialCheckinDatesByHabit);
   const [newItemName, setNewItemName] = useState("");
   const today = getTodayDate();
   const checkedItemIdsToday = new Set(
-    checkInHistory
-      .filter((historyItem) => historyItem.date === today)
-      .map((historyItem) => historyItem.habitId),
+    Object.entries(checkInDatesByHabit)
+      .filter(([, checkedDates]) => checkedDates.includes(today))
+      .map(([habitId]) => habitId),
   );
   const checkedCount = checkInItems.filter((item) =>
     checkedItemIdsToday.has(item.id),
@@ -75,13 +114,26 @@ export default function HabitTrackerClient({
       return;
     }
 
+    setCheckInDatesByHabit((currentDatesByHabit) => {
+      const currentDates = currentDatesByHabit[id] ?? [];
+      const filteredDates = currentDates.filter((date) => date !== today);
+
+      if (!result.checked) {
+        return {
+          ...currentDatesByHabit,
+          [id]: filteredDates,
+        };
+      }
+
+      return {
+        ...currentDatesByHabit,
+        [id]: [today, ...filteredDates],
+      };
+    });
+
     setCheckInHistory((currentHistory) => {
       const filteredHistory = currentHistory.filter(
-        (historyItem) =>
-          !(
-            historyItem.habitId === id &&
-            historyItem.date === today
-          ),
+        (historyItem) => !(historyItem.habitId === id && historyItem.date === today),
       );
 
       if (!result.checked) {
@@ -145,10 +197,15 @@ export default function HabitTrackerClient({
       setCheckInItems((currentItems) =>
         currentItems.filter((item) => item.id !== id),
       );
+      setCheckInDatesByHabit((currentDatesByHabit) => {
+        const remainingDatesByHabit = { ...currentDatesByHabit };
+
+        delete remainingDatesByHabit[id];
+
+        return remainingDatesByHabit;
+      });
       setCheckInHistory((currentHistory) =>
-        currentHistory.filter(
-          (historyItem) => historyItem.habitId !== id,
-        ),
+        currentHistory.filter((historyItem) => historyItem.habitId !== id),
       );
       return;
     }
@@ -162,6 +219,13 @@ export default function HabitTrackerClient({
     setCheckInItems((currentItems) =>
       currentItems.filter((item) => item.id !== id),
     );
+    setCheckInDatesByHabit((currentDatesByHabit) => {
+      const remainingDatesByHabit = { ...currentDatesByHabit };
+
+      delete remainingDatesByHabit[id];
+
+      return remainingDatesByHabit;
+    });
     setCheckInHistory((currentHistory) =>
       currentHistory.filter((historyItem) => historyItem.habitId !== id),
     );
@@ -193,12 +257,14 @@ export default function HabitTrackerClient({
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {checkInItems.map((item) => {
           const isCheckedIn = checkedItemIdsToday.has(item.id);
+          const streak = getHabitStreak(checkInDatesByHabit, item.id, today);
 
           return (
             <HabitCard
               key={item.id}
               name={item.name}
               checked={isCheckedIn}
+              streak={streak}
               onToggle={() => handleToggleCheckIn(item.id)}
               onDelete={() => handleDeleteItem(item.id)}
             />

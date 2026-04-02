@@ -71,8 +71,8 @@ export default async function CalendarPage() {
   const leadingEmptyCells = firstVisibleDate.getDay();
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-16">
-      <section className="mx-auto w-full max-w-4xl rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm sm:p-12">
+    <main className="min-h-screen bg-zinc-50">
+      <section className="min-h-screen w-full bg-white px-6 py-10 sm:px-8 sm:py-12">
         <div className="mb-8 flex justify-center sm:justify-start">
           <Nav />
         </div>
@@ -83,9 +83,6 @@ export default async function CalendarPage() {
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">
               打卡日历
             </h1>
-            <p className="mt-2 text-sm text-zinc-500">
-              绿色越深，表示当天打卡越多
-            </p>
           </div>
         </div>
 
@@ -124,24 +121,6 @@ export default async function CalendarPage() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-4 text-sm text-zinc-600">
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm bg-zinc-200" />
-            0 次
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm bg-green-200" />
-            1 次
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm bg-green-500" />
-            2 次
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm bg-green-700" />
-            3 次及以上
-          </div>
-        </div>
       </section>
     </main>
   );

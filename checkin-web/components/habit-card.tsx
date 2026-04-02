@@ -3,6 +3,7 @@
 type HabitCardProps = {
   name: string;
   checked: boolean;
+  streak: number;
   onToggle: () => void;
   onDelete: () => void;
 };
@@ -10,6 +11,7 @@ type HabitCardProps = {
 export default function HabitCard({
   name,
   checked,
+  streak,
   onToggle,
   onDelete,
 }: HabitCardProps) {
@@ -42,7 +44,7 @@ export default function HabitCard({
         className="block w-full rounded-2xl px-6 py-8 text-center"
       >
         <div className="text-lg font-medium">{name}</div>
-        <div className="mt-3 text-sm">{checked ? "已打卡" : "点击打卡"}</div>
+        <div className="mt-3 text-sm">{`已坚持 ${streak} 天`}</div>
       </button>
     </article>
   );

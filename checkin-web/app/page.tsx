@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [habits, recentCheckins] = await Promise.all([
+  const [habits, recentCheckins, allCheckins] = await Promise.all([
     prisma.habit.findMany({
       orderBy: {
         createdAt: "asc",
@@ -36,6 +36,12 @@ export default async function Home() {
       ],
       take: 200,
     }),
+    prisma.checkin.findMany({
+      select: {
+        habitId: true,
+        date: true,
+      },
+    }),
   ]);
 
   const initialHabits = habits.map((habit) => ({
@@ -50,29 +56,34 @@ export default async function Home() {
     habitId: String(checkin.habitId),
   }));
 
+  const initialCheckinDatesByHabit = allCheckins.reduce<
+    Record<string, string[]>
+  >((result, checkin) => {
+    const habitId = String(checkin.habitId);
+    const currentDates = result[habitId] ?? [];
+
+    result[habitId] = [...currentDates, checkin.date];
+
+    return result;
+  }, {});
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-6 py-16">
-      <section className="w-full max-w-3xl rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm sm:p-12">
+    <main className="min-h-screen bg-zinc-50">
+      <section className="min-h-screen w-full bg-white px-6 py-10 sm:px-8 sm:py-12">
         <div className="mb-8 flex justify-center sm:justify-start">
           <Nav />
         </div>
 
-        <div className="space-y-4 text-center">
-          <span className="inline-flex rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-600">
-            Daily Check-in
-          </span>
-          <p className="text-sm text-zinc-500">首页历史会优先显示数据库记录</p>
+        <div className="mb-8 text-center sm:text-left">
           <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
             打卡网站
           </h1>
-          <p className="text-base leading-7 text-zinc-600 sm:text-lg">
-            这是我的第一个 Next.js 打卡项目
-          </p>
         </div>
 
         <HabitTrackerClient
           initialHabits={initialHabits}
           initialHistoryRecords={initialHistoryRecords}
+          initialCheckinDatesByHabit={initialCheckinDatesByHabit}
         />
       </section>
     </main>
