@@ -4,8 +4,10 @@ import Nav from "@/components/nav";
 import prisma from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "打卡网站",
+  title: "Check-in Tracker",
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [habits, recentCheckins, allCheckins] = await Promise.all([
@@ -68,16 +70,18 @@ export default async function Home() {
   }, {});
 
   return (
-    <main className="min-h-screen bg-zinc-50">
-      <section className="min-h-screen w-full bg-white px-6 py-10 sm:px-8 sm:py-12">
-        <div className="mb-8 flex justify-center sm:justify-start">
+    <main className="page-shell min-h-screen overflow-hidden px-4 py-4 sm:px-6 sm:py-6">
+      <section className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col gap-6 sm:min-h-[calc(100vh-3rem)]">
+        <div className="flex justify-center sm:justify-start">
           <Nav />
         </div>
 
-        <div className="mb-8 text-center sm:text-left">
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-            打卡网站
-          </h1>
+        <div className="app-panel rounded-[34px] px-6 py-8 text-center sm:px-8 sm:py-10 sm:text-left lg:px-10">
+          <div className="relative z-10">
+            <h1 className="text-4xl font-semibold tracking-[-0.04em] text-zinc-900 sm:text-5xl">
+              Check-in Tracker
+            </h1>
+          </div>
         </div>
 
         <HabitTrackerClient

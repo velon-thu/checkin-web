@@ -1,11 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import {
-  addHabitAction,
-  deleteHabitAction,
-  toggleCheckinAction,
-} from "@/app/actions";
 import AddHabitForm from "@/components/add-habit-form";
 import HabitCard from "@/components/habit-card";
 import HistoryList from "@/components/history-list";
@@ -26,6 +21,70 @@ type HabitTrackerClientProps = {
   initialHabits: CheckInItem[];
   initialHistoryRecords: CheckInHistoryItem[];
   initialCheckinDatesByHabit: Record<string, string[]>;
+};
+
+type AddHabitMutationResult =
+  | { ok: false; message: "empty" | "error" }
+  | { ok: true; habit: { id: string; name: string } };
+
+type DeleteHabitMutationResult =
+  | { ok: false; message: "invalid_id" | "not_found" | "error" }
+  | { ok: true; id: number };
+
+type ToggleCheckinMutationResult =
+  | {
+      ok: false;
+      message: "invalid_habit_id" | "invalid_date" | "not_found" | "error";
+    }
+  | { ok: true; checked: boolean };
+
+const addHabitRequest = async (
+  name: string,
+): Promise<AddHabitMutationResult> => {
+  const response = await fetch("/api/habits", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  const result = (await response.json()) as AddHabitMutationResult;
+
+  return result;
+};
+
+const deleteHabitRequest = async (
+  id: number,
+): Promise<DeleteHabitMutationResult> => {
+  const response = await fetch("/api/habits", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id }),
+  });
+
+  const result = (await response.json()) as DeleteHabitMutationResult;
+
+  return result;
+};
+
+const toggleCheckinRequest = async (
+  habitId: number,
+  date: string,
+): Promise<ToggleCheckinMutationResult> => {
+  const response = await fetch("/api/checkins/toggle", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ habitId, date }),
+  });
+
+  const result = (await response.json()) as ToggleCheckinMutationResult;
+
+  return result;
 };
 
 const getTodayDate = () => {
@@ -108,7 +167,7 @@ export default function HabitTrackerClient({
       return;
     }
 
-    const result = await toggleCheckinAction(habitId, today);
+    const result = await toggleCheckinRequest(habitId, today);
 
     if (!result.ok) {
       return;
@@ -168,7 +227,7 @@ export default function HabitTrackerClient({
       return;
     }
 
-    const result = await addHabitAction(trimmedName);
+    const result = await addHabitRequest(trimmedName);
 
     if (!result.ok) {
       return;
@@ -210,9 +269,9 @@ export default function HabitTrackerClient({
       return;
     }
 
-    const result = await deleteHabitAction(numericId);
+    const result = await deleteHabitRequest(numericId);
 
-    if (!result.ok && result.message !== "not_found") {
+    if (!result.ok) {
       return;
     }
 
@@ -239,22 +298,24 @@ export default function HabitTrackerClient({
         onAdd={handleAddItem}
       />
 
-      <div className="mt-6 grid gap-4 rounded-2xl border border-zinc-200 bg-white p-4 sm:grid-cols-2">
-        <div className="rounded-xl bg-zinc-50 px-4 py-3 text-center sm:text-left">
-          <p className="text-sm text-zinc-500">今日已打卡</p>
-          <p className="mt-1 text-xl font-semibold text-zinc-900">
-            {checkedCount} 项
-          </p>
-        </div>
-        <div className="rounded-xl bg-zinc-50 px-4 py-3 text-center sm:text-left">
-          <p className="text-sm text-zinc-500">总项目数</p>
-          <p className="mt-1 text-xl font-semibold text-zinc-900">
-            {totalCount} 项
-          </p>
+      <div className="app-panel mt-6 rounded-[30px] p-3 sm:p-4">
+        <div className="relative z-10 grid gap-3 sm:grid-cols-2">
+          <div className="soft-panel rounded-[24px] px-5 py-4 text-center sm:text-left">
+            <p className="text-sm font-medium text-zinc-500">Checked In Today</p>
+            <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-zinc-900">
+              {checkedCount} items
+            </p>
+          </div>
+          <div className="soft-panel rounded-[24px] px-5 py-4 text-center sm:text-left">
+            <p className="text-sm font-medium text-zinc-500">Total Habits</p>
+            <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-zinc-900">
+              {totalCount} items
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {checkInItems.map((item) => {
           const isCheckedIn = checkedItemIdsToday.has(item.id);
           const streak = getHabitStreak(checkInDatesByHabit, item.id, today);

@@ -28,33 +28,39 @@ export default function HistoryList({ historyRecords }: HistoryListProps) {
   }, []);
 
   return (
-    <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6">
-      <h2 className="text-xl font-semibold text-zinc-900">打卡历史</h2>
-      <div className="mt-4 space-y-3">
-        {historyRecords.length === 0 ? (
-          <p className="text-sm text-zinc-400">今天还没有打卡记录</p>
-        ) : (
-          groupedHistory.map((group) => (
-            <div
-              key={group.date}
-              className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
-            >
-              <h3 className="text-sm font-semibold text-zinc-700">
-                {group.date}
-              </h3>
-              <div className="mt-3 space-y-2">
-                {group.items.map((historyItem) => (
-                  <div
-                    key={`${historyItem.id}-${historyItem.date}`}
-                    className="rounded-lg bg-white px-3 py-2 text-sm text-zinc-700"
-                  >
-                    {historyItem.name}
-                  </div>
-                ))}
+    <div className="app-panel mt-8 rounded-[32px] p-5 sm:p-6">
+      <div className="relative z-10">
+        <h2 className="text-2xl font-semibold tracking-[-0.03em] text-zinc-900">
+          Check-in History
+        </h2>
+        <div className="mt-5 space-y-4">
+          {historyRecords.length === 0 ? (
+            <p className="soft-panel rounded-[24px] px-4 py-8 text-center text-sm text-zinc-400">
+              No check-ins yet today
+            </p>
+          ) : (
+            groupedHistory.map((group) => (
+              <div
+                key={group.date}
+                className="soft-panel rounded-[24px] p-4 sm:p-5"
+              >
+                <h3 className="text-sm font-semibold tracking-[0.16em] text-zinc-500">
+                  {group.date}
+                </h3>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {group.items.map((historyItem) => (
+                    <div
+                      key={`${historyItem.id}-${historyItem.date}`}
+                      className="rounded-[18px] border border-white/80 bg-white/82 px-4 py-3 text-sm font-medium text-zinc-700 shadow-[0_12px_24px_-20px_rgba(23,33,27,0.28)]"
+                    >
+                      {historyItem.name}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
